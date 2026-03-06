@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Gem, Lock, Mail, User, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -13,17 +15,38 @@ export default function RegisterPage() {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+
         if (password !== confirmPassword) {
-            alert("Passwords don't match");
+            setError("Passwords don't match.");
             return;
         }
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters.');
+            return;
+        }
+
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        router.push('/login');
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            await updateProfile(userCredential.user, { displayName: name });
+            router.push('/');
+        } catch (err: unknown) {
+            const code = (err as { code?: string }).code;
+            if (code === 'auth/email-already-in-use') {
+                setError('An account with this email already exists.');
+            } else if (code === 'auth/weak-password') {
+                setError('Password is too weak. Use at least 8 characters.');
+            } else {
+                setError('Failed to create account. Please try again.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const inputStyle = {
@@ -103,6 +126,16 @@ export default function RegisterPage() {
                         </p>
                     </div>
 
+                    {/* Error Banner */}
+                    {error && (
+                        <div
+                            className="rounded-xl px-4 py-3 text-sm"
+                            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+                        >
+                            {error}
+                        </div>
+                    )}
+
                     <form className="space-y-4" onSubmit={handleRegister}>
                         {/* Name + Email */}
                         {fields.map(({ id, label, type, value, onChange, icon: Icon, placeholder }) => (
@@ -178,7 +211,7 @@ export default function RegisterPage() {
                         <label className="flex items-start gap-3 cursor-pointer">
                             <input type="checkbox" required className="mt-0.5 w-4 h-4 rounded" style={{ accentColor: '#c9a96e' }} />
                             <span className="text-sm" style={{ color: 'rgba(240,237,232,0.5)' }}>
-                                I agree to Carvelle's{' '}
+                                I agree to Carvelle&apos;s{' '}
                                 <Link href="/terms" className="font-semibold" style={{ color: 'var(--primary)' }}>Terms of Service</Link>
                                 {' '}and{' '}
                                 <Link href="/privacy" className="font-semibold" style={{ color: 'var(--primary)' }}>Privacy Policy</Link>

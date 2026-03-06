@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Gem, Lock, Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -11,13 +13,27 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
         setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        router.push('/');
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+            router.push('/');
+        } catch (err: unknown) {
+            const code = (err as { code?: string }).code;
+            if (code === 'auth/user-not-found' || code === 'auth/wrong-password' || code === 'auth/invalid-credential') {
+                setError('Invalid email or password. Please try again.');
+            } else if (code === 'auth/too-many-requests') {
+                setError('Too many failed attempts. Please try again later.');
+            } else {
+                setError('Failed to sign in. Please try again.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -84,6 +100,14 @@ export default function LoginPage() {
                     </div>
 
                     {/* Form */}
+                    {error && (
+                        <div
+                            className="rounded-xl px-4 py-3 text-sm"
+                            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', color: '#f87171' }}
+                        >
+                            {error}
+                        </div>
+                    )}
                     <form className="space-y-5" onSubmit={handleLogin}>
                         {/* Email */}
                         <div className="space-y-2">

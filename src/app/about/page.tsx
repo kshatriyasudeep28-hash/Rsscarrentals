@@ -29,23 +29,6 @@ const VALUES = [
     },
 ];
 
-const TEAM = [
-    {
-        name: 'Arjun Mehra',
-        role: 'Founder & CEO',
-        img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=400&auto=format&fit=crop',
-    },
-    {
-        name: 'Priya Kapoor',
-        role: 'Head of Fleet Operations',
-        img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=400&auto=format&fit=crop',
-    },
-    {
-        name: 'Rahul Sharma',
-        role: 'Chief Experience Officer',
-        img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400&auto=format&fit=crop',
-    },
-];
 
 const STATS = [
     { icon: Car, value: '200+', label: 'Luxury Vehicles' },
@@ -186,31 +169,6 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* Team */}
-            <section className="py-24">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <p className="section-label mb-3">The People Behind Carvelle</p>
-                        <h2 className="text-4xl font-extrabold text-white">Meet Our Team</h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
-                        {TEAM.map(({ name, role, img }) => (
-                            <div key={name} className="text-center group">
-                                <div className="relative w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden"
-                                    style={{ border: '2px solid rgba(201,169,110,0.3)' }}>
-                                    <img
-                                        src={img}
-                                        alt={name}
-                                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                                    />
-                                </div>
-                                <h3 className="font-bold text-white text-lg">{name}</h3>
-                                <p className="text-sm" style={{ color: 'var(--primary)' }}>{role}</p>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
 
             {/* CTA */}
             <section className="py-20" style={{ background: 'var(--surface)' }}>

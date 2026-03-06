@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { cars } from '@/data/cars';
 import { Car } from '@/types';
-import { Calendar, MapPin, User, Mail, Phone, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, User, Mail, Phone, ShieldCheck, AlertCircle, Copy, CheckCircle } from 'lucide-react';
 
 const formatINR = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
@@ -14,8 +14,9 @@ export default function BookingForm() {
     const router = useRouter();
     const carId = searchParams.get('carId');
     const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-    const [submitted, setSubmitted] = useState(false);
+    const [step, setStep] = useState<'form' | 'payment' | 'success'>('form');
     const [loading, setLoading] = useState(false);
+    const [copied, setCopied] = useState(false);
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         firstName: '',
@@ -52,24 +53,126 @@ export default function BookingForm() {
         return calculateDays() * selectedCar.pricePerDay;
     };
 
+    const UPI_ID = '8010493767@kotak811';
+    const UPI_NAME = 'Kshatriya Sudeep Sunil';
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedCar || calculateTotal() === 0) return;
         setLoading(true);
-        setError('');
-        try {
-            // Simulate a short processing delay
-            await new Promise((res) => setTimeout(res, 1000));
-            setSubmitted(true);
-        } catch {
-            setError('Something went wrong. Please try again.');
-        } finally {
-            setLoading(false);
-        }
+        await new Promise((res) => setTimeout(res, 600));
+        setLoading(false);
+        setStep('payment');
     };
 
+    const handleCopyUPI = () => {
+        navigator.clipboard.writeText(UPI_ID);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handlePaymentDone = () => {
+        setStep('success');
+    };
+
+    // ─── UPI Payment Screen ───────────────────────────────────────────────────
+    if (step === 'payment') {
+        const total = Math.round(calculateTotal() * 1.18);
+        return (
+            <div
+                className="rounded-2xl overflow-hidden"
+                style={{ background: 'var(--surface)', border: '1px solid rgba(201,169,110,0.25)' }}
+            >
+                <div className="px-8 pt-8 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                    <h2 className="text-2xl font-extrabold text-white mb-1">Complete Your Payment</h2>
+                    <p style={{ color: 'rgba(240,237,232,0.45)', fontSize: '0.875rem' }}>
+                        Scan the QR code or use the UPI ID to pay.
+                    </p>
+                </div>
+                <div className="p-8 flex flex-col items-center space-y-6">
+                    {/* Amount */}
+                    <div
+                        className="w-full rounded-xl p-4 text-center"
+                        style={{ background: 'rgba(201,169,110,0.08)', border: '1px solid rgba(201,169,110,0.25)' }}
+                    >
+                        <p className="text-xs uppercase tracking-widest font-semibold mb-1" style={{ color: 'rgba(240,237,232,0.5)' }}>Amount to Pay</p>
+                        <p className="text-3xl font-extrabold" style={{ color: '#c9a96e' }}>{formatINR(total)}</p>
+                        <p className="text-xs mt-1" style={{ color: 'rgba(240,237,232,0.35)' }}>incl. 18% GST</p>
+                    </div>
+
+                    {/* QR Code */}
+                    <div
+                        className="rounded-2xl p-3 bg-white"
+                        style={{ border: '2px solid rgba(201,169,110,0.3)', boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}
+                    >
+                        <img src="/upi-qr.jpg" alt="UPI QR Code" className="w-56 h-56 object-contain" />
+                    </div>
+
+                    {/* UPI Details */}
+                    <div className="w-full space-y-2 text-center">
+                        <p className="font-bold text-white text-lg">{UPI_NAME}</p>
+                        <div
+                            className="flex items-center justify-between gap-3 rounded-xl px-4 py-3"
+                            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                        >
+                            <span className="font-mono text-sm" style={{ color: 'rgba(240,237,232,0.75)' }}>{UPI_ID}</span>
+                            <button
+                                type="button"
+                                onClick={handleCopyUPI}
+                                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all duration-300"
+                                style={{ background: copied ? 'rgba(201,169,110,0.2)' : 'rgba(201,169,110,0.1)', color: '#c9a96e' }}
+                            >
+                                {copied ? <CheckCircle className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                {copied ? 'Copied!' : 'Copy'}
+                            </button>
+                        </div>
+                        <p className="text-xs" style={{ color: 'rgba(240,237,232,0.35)' }}>Kotak 811 · UPI</p>
+                    </div>
+
+                    {/* Steps */}
+                    <div
+                        className="w-full rounded-xl p-4 space-y-2"
+                        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}
+                    >
+                        <p className="text-xs uppercase tracking-widest font-semibold mb-3" style={{ color: 'rgba(240,237,232,0.4)' }}>How to Pay</p>
+                        {[
+                            'Open any UPI app (GPay, PhonePe, Paytm, etc.)',
+                            'Scan the QR code or enter the UPI ID manually',
+                            `Enter amount: ${formatINR(total)}`,
+                            'Complete the payment and click the button below',
+                        ].map((step, i) => (
+                            <div key={i} className="flex items-start gap-3">
+                                <span
+                                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
+                                    style={{ background: 'rgba(201,169,110,0.15)', color: '#c9a96e' }}
+                                >{i + 1}</span>
+                                <p className="text-sm" style={{ color: 'rgba(240,237,232,0.55)' }}>{step}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Confirm Button */}
+                    <button
+                        onClick={handlePaymentDone}
+                        className="btn-amber w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2.5 amber-glow"
+                    >
+                        <CheckCircle className="w-5 h-5" />
+                        I&apos;ve Completed the Payment
+                    </button>
+                    <button
+                        onClick={() => setStep('form')}
+                        className="text-sm underline"
+                        style={{ color: 'rgba(240,237,232,0.35)' }}
+                    >
+                        ← Go back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     // ─── Success Screen ────────────────────────────────────────────────────────
-    if (submitted) {
+    if (step === 'success') {
         return (
             <div
                 className="rounded-2xl p-10 text-center space-y-6"
@@ -349,12 +452,12 @@ export default function BookingForm() {
                         {loading ? (
                             <>
                                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                Confirming Booking...
+                                Processing...
                             </>
                         ) : (
                             <>
                                 <ShieldCheck className="w-5 h-5" />
-                                Confirm Booking {calculateTotal() > 0 ? `· ${formatINR(Math.round(calculateTotal() * 1.18))}` : ''}
+                                Proceed to Pay via UPI {calculateTotal() > 0 ? `· ${formatINR(Math.round(calculateTotal() * 1.18))}` : ''}
                             </>
                         )}
                     </button>

@@ -169,6 +169,31 @@ export default function AboutPage() {
                 </div>
             </section>
 
+            {/* Team */}
+            <section className="py-24">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-16">
+                        <p className="section-label mb-3">The People Behind Carvelle</p>
+                        <h2 className="text-4xl font-extrabold text-white">Meet Our Team</h2>
+                    </div>
+                    <div className="flex justify-center">
+                        <div className="text-center group">
+                            <div
+                                className="relative w-40 h-40 mx-auto mb-5 rounded-full overflow-hidden"
+                                style={{ border: '2px solid rgba(201,169,110,0.4)' }}
+                            >
+                                <img
+                                    src="/sudeep.jpg"
+                                    alt="Sudeep Kshatriya"
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                />
+                            </div>
+                            <h3 className="font-bold text-white text-xl mb-1">Sudeep Kshatriya</h3>
+                            <p className="text-sm font-medium" style={{ color: 'var(--primary)' }}>Developer</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* CTA */}
             <section className="py-20" style={{ background: 'var(--surface)' }}>

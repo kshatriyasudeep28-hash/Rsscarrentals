@@ -1,0 +1,358 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* === Carvelle Dark Theme === */
+  --background: #0a0a0f;
+  --surface: #111118;
+  --surface-2: #16161f;
+  --foreground: #f0ede8;
+  --foreground-muted: rgba(240, 237, 232, 0.55);
+
+  /* Amber / Copper Accent */
+  --primary: #c9a96e;
+  --primary-foreground: #0a0a0f;
+  --primary-glow: rgba(201, 169, 110, 0.18);
+  --primary-gradient: linear-gradient(135deg, #c9a96e 0%, #b8914f 100%);
+
+  /* Secondary - lighter warm white */
+  --secondary: #f0ede8;
+  --secondary-foreground: #0a0a0f;
+
+  /* Glass / Border */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(201, 169, 110, 0.4);
+  --glass-bg: rgba(17, 17, 24, 0.7);
+  --glass-bg-light: rgba(255, 255, 255, 0.04);
+
+  /* Accent - surface highlight */
+  --accent: #1a1a24;
+  --accent-foreground: #f0ede8;
+
+  --muted: rgba(240, 237, 232, 0.4);
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+
+  --radius: 12px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-glass: var(--glass-bg);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --radius: var(--radius);
+}
+
+/* Force dark mode always */
+html {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================
+   Utility Classes
+   ============================ */
+
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-card-light {
+  background: var(--glass-bg-light);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.amber-glow {
+  box-shadow: 0 0 30px var(--primary-glow), 0 0 60px rgba(201, 169, 110, 0.06);
+}
+
+.amber-glow-sm {
+  box-shadow: 0 0 15px var(--primary-glow);
+}
+
+.btn-amber {
+  background: var(--primary-gradient);
+  color: var(--primary-foreground);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: all 0.3s ease;
+}
+
+.btn-amber:hover {
+  box-shadow: 0 8px 30px var(--primary-glow);
+  transform: translateY(-1px);
+}
+
+.text-amber {
+  color: var(--primary);
+}
+
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+/* ============================
+   Animations
+   ============================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes bounceScroll {
+
+  0%,
+  100% {
+    transform: translateY(-25%) translateX(-50%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+
+  50% {
+    transform: translateY(0) translateX(-50%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px var(--primary-glow);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(201, 169, 110, 0.35);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-in {
+  opacity: 0;
+  animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-in-left {
+  opacity: 0;
+  animation: fadeInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-zoom {
+  animation: zoomIn 22s ease-in-out infinite alternate;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.04), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+.animate-bounce-scroll {
+  animation: bounceScroll 1.5s infinite;
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+/* ============================
+   Scrollbar
+   ============================ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 169, 110, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 169, 110, 0.5);
+}
+
+/* ============================
+   Selection
+   ============================ */
+::selection {
+  background: rgba(201, 169, 110, 0.3);
+  color: #fff;
+}
+
+/* ============================
+   Hover Utility Classes
+   (used in server components instead of onMouseEnter/Leave)
+   ============================ */
+
+.hover-amber:hover {
+  color: #c9a96e !important;
+}
+
+.hover-white:hover {
+  color: #ffffff !important;
+}
+
+.hover-amber-border:hover {
+  border-color: rgba(201, 169, 110, 0.4) !important;
+  color: #c9a96e !important;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  border-color: rgba(201, 169, 110, 0.35) !important;
+  box-shadow: 0 0 40px rgba(201, 169, 110, 0.1), 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.hover-social:hover {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #0a0a0f !important;
+  transform: translateY(-2px);
+}
+
+.hover-step:hover {
+  border-color: rgba(201, 169, 110, 0.3) !important;
+  background: rgba(201, 169, 110, 0.04) !important;
+  transform: translateY(-4px);
+}
+
+.hover-ghost-amber:hover {
+  border-color: rgba(201, 169, 110, 0.4) !important;
+  color: #c9a96e !important;
+}
+
+/* Transition defaults for hover targets */
+.hover-amber,
+.hover-white,
+.hover-amber-border,
+.hover-lift,
+.hover-social,
+.hover-step,
+.hover-ghost-amber {
+  transition: all 0.3s ease;
+}

@@ -17,6 +17,7 @@ export default function BookingForm() {
     const [step, setStep] = useState<'form' | 'payment' | 'success'>('form');
     const [loading, setLoading] = useState(false);
     const [copied, setCopied] = useState(false);
+    const [utrNumber, setUtrNumber] = useState('');
     const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         firstName: '',
@@ -74,6 +75,23 @@ export default function BookingForm() {
     const handlePaymentDone = () => {
         setStep('success');
     };
+
+    const inputStyle = {
+        background: 'rgba(255,255,255,0.04)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        color: 'var(--foreground)',
+    };
+    const focusHandlers = {
+        onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+            e.currentTarget.style.borderColor = 'rgba(201,169,110,0.5)';
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.07)';
+        },
+        onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+            e.currentTarget.style.boxShadow = 'none';
+        },
+    };
+    const labelStyle = { color: 'rgba(240,237,232,0.5)' };
 
     // ─── UPI Payment Screen ───────────────────────────────────────────────────
     if (step === 'payment') {
@@ -151,10 +169,27 @@ export default function BookingForm() {
                         ))}
                     </div>
 
+                    {/* UTR Input */}
+                    <div className="w-full space-y-1.5 mt-2">
+                        <label className="block text-xs font-semibold uppercase tracking-wider" style={labelStyle}>
+                            UTR / Reference Number (12 Digits)
+                        </label>
+                        <input
+                            type="text"
+                            value={utrNumber}
+                            onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                            placeholder="e.g. 123456789012"
+                            className="w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-300 text-center tracking-widest font-mono"
+                            style={inputStyle}
+                            {...focusHandlers}
+                        />
+                    </div>
+
                     {/* Confirm Button */}
                     <button
                         onClick={handlePaymentDone}
-                        className="btn-amber w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2.5 amber-glow"
+                        disabled={utrNumber.length !== 12}
+                        className="btn-amber w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2.5 amber-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
                     >
                         <CheckCircle className="w-5 h-5" />
                         I&apos;ve Completed the Payment
@@ -201,8 +236,12 @@ export default function BookingForm() {
                         <span className="text-white">{calculateDays()} day{calculateDays() > 1 ? 's' : ''}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>Total (incl. GST)</span>
+                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>Total Paid</span>
                         <span className="font-bold" style={{ color: '#c9a96e' }}>{formatINR(Math.round(calculateTotal() * 1.18))}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>UTR Reference</span>
+                        <span className="font-mono text-white text-xs tracking-wider">{utrNumber}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                         <span style={{ color: 'rgba(240,237,232,0.55)' }}>Pick-up</span>
@@ -222,23 +261,6 @@ export default function BookingForm() {
             </div>
         );
     }
-
-    const inputStyle = {
-        background: 'rgba(255,255,255,0.04)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        color: 'var(--foreground)',
-    };
-    const focusHandlers = {
-        onFocus: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-            e.currentTarget.style.borderColor = 'rgba(201,169,110,0.5)';
-            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.07)';
-        },
-        onBlur: (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-            e.currentTarget.style.boxShadow = 'none';
-        },
-    };
-    const labelStyle = { color: 'rgba(240,237,232,0.5)' };
 
     return (
         <div

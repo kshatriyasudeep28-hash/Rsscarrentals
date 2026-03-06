@@ -4,60 +4,19 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { cars } from '@/data/cars';
 import { Car } from '@/types';
-import { Calendar, MapPin, User, Mail, Phone, CreditCard, ShieldCheck, AlertCircle } from 'lucide-react';
-
-// Razorpay types
-declare global {
-    interface Window {
-        Razorpay: new (options: RazorpayOptions) => RazorpayInstance;
-    }
-}
-interface RazorpayOptions {
-    key: string;
-    amount: number;
-    currency: string;
-    name: string;
-    description: string;
-    image?: string;
-    order_id: string;
-    handler: (response: RazorpayResponse) => void;
-    prefill?: { name?: string; email?: string; contact?: string };
-    notes?: Record<string, string>;
-    theme?: { color?: string };
-    modal?: { ondismiss?: () => void };
-}
-interface RazorpayResponse {
-    razorpay_payment_id: string;
-    razorpay_order_id: string;
-    razorpay_signature: string;
-}
-interface RazorpayInstance {
-    open: () => void;
-}
+import { Calendar, MapPin, User, Mail, Phone, ShieldCheck, AlertCircle } from 'lucide-react';
 
 const formatINR = (amount: number) =>
     new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
-
-const loadRazorpayScript = (): Promise<boolean> =>
-    new Promise((resolve) => {
-        if (document.getElementById('razorpay-script')) { resolve(true); return; }
-        const script = document.createElement('script');
-        script.id = 'razorpay-script';
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.body.appendChild(script);
-    });
-
-type PaymentStatus = 'idle' | 'creating_order' | 'processing' | 'success' | 'failed';
 
 export default function BookingForm() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const carId = searchParams.get('carId');
     const [selectedCar, setSelectedCar] = useState<Car | null>(null);
-    const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
-    const [paymentId, setPaymentId] = useState('');
+    const [submitted, setSubmitted] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -93,93 +52,24 @@ export default function BookingForm() {
         return calculateDays() * selectedCar.pricePerDay;
     };
 
-    const handlePayment = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedCar || calculateTotal() === 0) return;
-
-        setPaymentStatus('creating_order');
-
-        // Step 1: Load Razorpay SDK
-        const loaded = await loadRazorpayScript();
-        if (!loaded) {
-            setPaymentStatus('failed');
-            return;
-        }
-
+        setLoading(true);
+        setError('');
         try {
-            // Step 2: Create Razorpay order via API route
-            const orderRes = await fetch('/api/create-order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    amount: calculateTotal(),
-                    currency: 'INR',
-                    receipt: `booking_${selectedCar.id}_${Date.now()}`,
-                }),
-            });
-
-            if (!orderRes.ok) throw new Error('Failed to create order');
-            const { orderId, amount } = await orderRes.json();
-
-            setPaymentStatus('processing');
-
-            // Step 3: Open Razorpay checkout
-            const options: RazorpayOptions = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-                amount,
-                currency: 'INR',
-                name: 'Carvelle Luxury',
-                description: `${selectedCar.make} ${selectedCar.model} — ${calculateDays()} day${calculateDays() > 1 ? 's' : ''}`,
-                image: selectedCar.image,
-                order_id: orderId,
-                prefill: {
-                    name: `${formData.firstName} ${formData.lastName}`,
-                    email: formData.email,
-                    contact: formData.phone,
-                },
-                notes: {
-                    carId: selectedCar.id,
-                    pickupLocation: formData.pickupLocation,
-                    pickupDate: formData.pickupDate,
-                    dropoffDate: formData.dropoffDate,
-                },
-                theme: { color: '#c9a96e' },
-                handler: async (response: RazorpayResponse) => {
-                    // Step 4: Verify on server
-                    try {
-                        const verifyRes = await fetch('/api/verify-payment', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(response),
-                        });
-                        const result = await verifyRes.json();
-                        if (result.success) {
-                            setPaymentId(result.paymentId);
-                            setPaymentStatus('success');
-                        } else {
-                            setPaymentStatus('failed');
-                        }
-                    } catch {
-                        setPaymentStatus('failed');
-                    }
-                },
-                modal: {
-                    ondismiss: () => {
-                        if (paymentStatus === 'processing') setPaymentStatus('idle');
-                    },
-                },
-            };
-
-            const rzp = new window.Razorpay(options);
-            rzp.open();
-        } catch (err) {
-            console.error(err);
-            setPaymentStatus('failed');
+            // Simulate a short processing delay
+            await new Promise((res) => setTimeout(res, 1000));
+            setSubmitted(true);
+        } catch {
+            setError('Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
-    // ─── Success Screen ───────────────────────────────────────────────────────
-    if (paymentStatus === 'success') {
+    // ─── Success Screen ────────────────────────────────────────────────────────
+    if (submitted) {
         return (
             <div
                 className="rounded-2xl p-10 text-center space-y-6"
@@ -194,25 +84,30 @@ export default function BookingForm() {
                 <div>
                     <h2 className="text-2xl font-extrabold text-white mb-2">Booking Confirmed!</h2>
                     <p style={{ color: 'rgba(240,237,232,0.6)' }}>
-                        Your {selectedCar?.make} {selectedCar?.model} is reserved.
+                        Your {selectedCar?.make} {selectedCar?.model} is reserved. We&apos;ll contact you at{' '}
+                        <span className="text-white font-medium">{formData.email}</span> to confirm details.
                     </p>
                 </div>
                 <div
                     className="rounded-xl p-4 text-left space-y-2"
                     style={{ background: 'rgba(201,169,110,0.06)', border: '1px solid rgba(201,169,110,0.15)' }}
                 >
-                    <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: '#c9a96e' }}>Payment Details</p>
-                    <div className="flex justify-between text-sm">
-                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>Payment ID</span>
-                        <span className="font-mono text-white text-xs">{paymentId}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>Amount Paid</span>
-                        <span className="font-bold" style={{ color: '#c9a96e' }}>{formatINR(calculateTotal())}</span>
-                    </div>
+                    <p className="text-xs uppercase tracking-widest font-semibold" style={{ color: '#c9a96e' }}>Booking Summary</p>
                     <div className="flex justify-between text-sm">
                         <span style={{ color: 'rgba(240,237,232,0.55)' }}>Duration</span>
                         <span className="text-white">{calculateDays()} day{calculateDays() > 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>Total (incl. GST)</span>
+                        <span className="font-bold" style={{ color: '#c9a96e' }}>{formatINR(Math.round(calculateTotal() * 1.18))}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>Pick-up</span>
+                        <span className="text-white">{formData.pickupDate}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span style={{ color: 'rgba(240,237,232,0.55)' }}>Drop-off</span>
+                        <span className="text-white">{formData.dropoffDate}</span>
                     </div>
                 </div>
                 <button
@@ -284,20 +179,18 @@ export default function BookingForm() {
                     </div>
                 )}
 
-                {/* Failed Banner */}
-                {paymentStatus === 'failed' && (
+                {/* Error Banner */}
+                {error && (
                     <div
                         className="mb-6 rounded-xl p-4 flex items-center gap-3"
                         style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)' }}
                     >
                         <AlertCircle className="w-5 h-5 flex-shrink-0" style={{ color: '#f87171' }} />
-                        <p className="text-sm" style={{ color: '#f87171' }}>
-                            Payment failed or was cancelled. Please try again.
-                        </p>
+                        <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>
                     </div>
                 )}
 
-                <form onSubmit={handlePayment} className="space-y-5">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     {/* Name Row */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {[
@@ -447,39 +340,27 @@ export default function BookingForm() {
                         </div>
                     )}
 
-                    {/* Pay Button */}
+                    {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={paymentStatus === 'creating_order' || paymentStatus === 'processing' || calculateTotal() === 0}
+                        disabled={loading || calculateTotal() === 0}
                         className="btn-amber w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2.5 amber-glow disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {paymentStatus === 'creating_order' || paymentStatus === 'processing' ? (
+                        {loading ? (
                             <>
                                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                {paymentStatus === 'creating_order' ? 'Preparing Payment...' : 'Opening Checkout...'}
+                                Confirming Booking...
                             </>
                         ) : (
                             <>
-                                <CreditCard className="w-5 h-5" />
-                                Pay {calculateTotal() > 0 ? formatINR(Math.round(calculateTotal() * 1.18)) : ''} with Razorpay
+                                <ShieldCheck className="w-5 h-5" />
+                                Confirm Booking {calculateTotal() > 0 ? `· ${formatINR(Math.round(calculateTotal() * 1.18))}` : ''}
                             </>
                         )}
                     </button>
 
-                    {/* Trust badges */}
-                    <div className="flex items-center justify-center gap-6 pt-1">
-                        {['UPI', 'Cards', 'Net Banking', 'Wallets'].map((method) => (
-                            <span
-                                key={method}
-                                className="text-xs font-medium"
-                                style={{ color: 'rgba(240,237,232,0.3)' }}
-                            >
-                                {method}
-                            </span>
-                        ))}
-                    </div>
                     <p className="text-center text-xs" style={{ color: 'rgba(240,237,232,0.25)' }}>
-                        🔒 Secured by Razorpay · PCI DSS Compliant
+                        🔒 Your details are safe and secure
                     </p>
                 </form>
             </div>
